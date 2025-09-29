@@ -241,6 +241,12 @@ public:
 	void setNotificationsCorner(ScreenCorner corner) {
 		_notificationsCorner = corner;
 	}
+	[[nodiscard]] QString notificationsDisplayId() const {
+		return _notificationsDisplayId;
+	}
+	void setNotificationsDisplayId(const QString &displayId) {
+		_notificationsDisplayId = displayId;
+	}
 	[[nodiscard]] bool includeMutedCounter() const {
 		return _includeMutedCounter;
 	}
@@ -988,6 +994,7 @@ private:
 	bool _skipToastsInFocus = false;
 	int _notificationsCount = 3;
 	ScreenCorner _notificationsCorner = ScreenCorner::BottomRight;
+	QString _notificationsDisplayId;
 	bool _includeMutedCounter = true;
 	bool _includeMutedCounterFolders = true;
 	bool _countUnreadMessages = true;

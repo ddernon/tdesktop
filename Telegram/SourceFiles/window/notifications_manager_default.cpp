@@ -51,10 +51,23 @@ namespace {
 
 [[nodiscard]] QPoint notificationStartPosition() {
 	const auto corner = Core::App().settings().notificationsCorner();
+	const auto displayId = Core::App().settings().notificationsDisplayId();
 	const auto window = Core::App().activePrimaryWindow();
-	const auto r = window
+
+	auto screen = QGuiApplication::primaryScreen();
+	auto nonPrimaryScreen = (displayId != screen->name());
+	if (nonPrimaryScreen && !displayId.isEmpty()) {
+		for (const auto candidateScreen : QGuiApplication::screens()) {
+			if (candidateScreen->name() == displayId) {
+				screen = candidateScreen;
+				break;
+			}
+		}
+	}
+
+	const auto r = (window && !nonPrimaryScreen)
 		? window->widget()->desktopRect()
-		: QGuiApplication::primaryScreen()->availableGeometry();
+		: screen->availableGeometry();
 	const auto isLeft = Core::Settings::IsLeftCorner(corner);
 	const auto isTop = Core::Settings::IsTopCorner(corner);
 	const auto x = (isLeft == rtl())

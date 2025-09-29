@@ -52,6 +52,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_dialogs.h"
 
 #include <QSvgRenderer>
+#include <QtGui/QGuiApplication>
+#include <QtGui/QScreen>
 
 namespace Settings {
 namespace {
@@ -542,7 +544,19 @@ void NotificationsCount::setOverCorner(ScreenCorner corner) {
 		samples[i]->showFast();
 	}
 	if (samplesNeeded > samplesLeave) {
-		auto r = _controller->widget()->desktopRect();
+		const auto r = [&] {
+			const auto displayId
+				= Core::App().settings().notificationsDisplayId();
+			if (!displayId.isEmpty()) {
+				const auto screens = QGuiApplication::screens();
+				for (const auto screen : screens) {
+					if (screen->name() == displayId) {
+						return screen->availableGeometry();
+					}
+				}
+			}
+			return _controller->widget()->desktopRect();
+		}();
 		auto isLeft = Core::Settings::IsLeftCorner(_overCorner);
 		auto isTop = Core::Settings::IsTopCorner(_overCorner);
 		auto sampleLeft = (isLeft == rtl()) ? (r.x() + r.width() - st::notifyWidth - st::notifyDeltaX) : (r.x() + st::notifyDeltaX);
@@ -885,6 +899,59 @@ void SetupAdvancedNotifications(
 					Change::DesktopEnabled);
 			}
 		}, skipInFocus->lifetime());
+	}
+
+	const auto screens = QGuiApplication::screens();
+	if (screens.size() > 1) {
+		Ui::AddSkip(container, st::settingsCheckboxesSkip);
+		Ui::AddDivider(container);
+		Ui::AddSkip(container, st::settingsCheckboxesSkip);
+		Ui::AddSubsectionTitle(
+			container,
+			tr::lng_settings_notifications_display());
+
+		const auto currentDisplayId
+			= Core::App().settings().notificationsDisplayId();
+		auto currentIndex = 0;
+		for (int i = 0; i < screens.size(); ++i) {
+			if (screens[i]->name() == currentDisplayId) {
+				currentIndex = i;
+				break;
+			}
+		}
+
+		const auto group = std::make_shared<Ui::RadiobuttonGroup>(
+			currentIndex);
+		for (auto i = 0; i < screens.size(); ++i) {
+			const auto &screen = screens[i];
+			const auto geometry = screen->geometry();
+			const auto name = screen->name();
+			const auto resolution = QString::number(geometry.width())
+				+ QChar(0x00D7)
+				+ QString::number(geometry.height());
+			const auto label = name.isEmpty()
+				? QString("Display %1 (%2)").arg(i + 1).arg(resolution)
+				: QString("%1 (%2)").arg(name).arg(resolution);
+			container->add(
+				object_ptr<Ui::Radiobutton>(
+					container,
+					group,
+					i,
+					label,
+					st::settingsSendType),
+				st::settingsSendTypePadding);
+		}
+		group->setChangedCallback([=](int selectedIndex) {
+			const auto screens = QGuiApplication::screens();
+			if (selectedIndex >= 0 && selectedIndex < screens.size()) {
+				const auto screenId = screens[selectedIndex]->name();
+				Core::App().settings().setNotificationsDisplayId(screenId);
+				Core::App().saveSettings();
+				Core::App().notifications().notifySettingsChanged(
+					ChangeType::Corner);
+			}
+		});
+		Ui::AddSkip(container, st::settingsCheckboxesSkip);
 	}
 
 	Ui::AddSkip(container, st::settingsCheckboxesSkip);
