@@ -26,6 +26,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "core/click_handler_types.h" // UrlClickHandler
 #include "core/ui_integration.h"
 #include "data/components/credits.h"
+#include "data/components/recent_shared_media_gifts.h"
 #include "data/data_boosts.h"
 #include "data/data_channel.h"
 #include "data/data_document.h"
@@ -212,69 +213,6 @@ void ToggleStarGiftSaved(
 		if (const auto onstack = done) {
 			onstack(false);
 		}
-		show->showToast(error.type());
-	}).send();
-}
-
-void ToggleStarGiftPinned(
-		std::shared_ptr<ChatHelpers::Show> show,
-		Data::SavedStarGiftId savedId,
-		std::vector<Data::SavedStarGiftId> already,
-		bool pinned,
-		std::shared_ptr<Data::UniqueGift> uniqueData = nullptr,
-		std::shared_ptr<Data::UniqueGift> replacingData = nullptr) {
-	already.erase(ranges::remove(already, savedId), end(already));
-	if (pinned) {
-		already.insert(begin(already), savedId);
-		const auto limit = show->session().appConfig().pinnedGiftsLimit();
-		if (already.size() > limit) {
-			already.erase(begin(already) + limit, end(already));
-		}
-	}
-
-	auto inputs = QVector<MTPInputSavedStarGift>();
-	inputs.reserve(already.size());
-	for (const auto &id : already) {
-		inputs.push_back(Api::InputSavedStarGiftId(id));
-	}
-
-	const auto api = &show->session().api();
-	const auto peer = savedId.chat()
-		? savedId.chat()
-		: show->session().user();
-	api->request(MTPpayments_ToggleStarGiftsPinnedToTop(
-		peer->input,
-		MTP_vector<MTPInputSavedStarGift>(std::move(inputs))
-	)).done([=] {
-		using GiftAction = Data::GiftUpdate::Action;
-		show->session().data().notifyGiftUpdate({
-			.id = savedId,
-			.action = (pinned ? GiftAction::Pin : GiftAction::Unpin),
-		});
-
-		if (pinned) {
-			show->showToast({
-				.title = (uniqueData
-					? tr::lng_gift_pinned_done_title(
-						tr::now,
-						lt_gift,
-						Data::UniqueGiftName(*uniqueData))
-					: QString()),
-				.text = (replacingData
-					? tr::lng_gift_pinned_done_replaced(
-						tr::now,
-						lt_gift,
-						TextWithEntities{
-							Data::UniqueGiftName(*replacingData),
-						},
-						Ui::Text::WithEntities)
-					: tr::lng_gift_pinned_done(
-						tr::now,
-						Ui::Text::WithEntities)),
-				.duration = Ui::Toast::kDefaultDuration * 2,
-			});
-		}
-	}).fail([=](const MTP::Error &error) {
 		show->showToast(error.type());
 	}).send();
 }
@@ -1035,7 +973,12 @@ void FillUniqueGiftMenu(
 		};
 		if (e.giftPinned) {
 			menu->addAction(tr::lng_context_unpin_from_top(tr::now), [=] {
-				ToggleStarGiftPinned(show, savedId, ids(pinned()), false);
+				session->recentSharedGifts().togglePinned(
+					show,
+					giftChannel ? giftChannel : session->user(),
+					savedId,
+					false,
+					unique);
 			}, st.unpin ? st.unpin : &st::menuIconUnpin);
 		} else {
 			menu->addAction(tr::lng_context_pin_to_top(tr::now), [=] {
@@ -1061,19 +1004,19 @@ void FillUniqueGiftMenu(
 							.action = GiftAction::Unpin,
 						});
 
-						ToggleStarGiftPinned(
+						session->recentSharedGifts().togglePinned(
 							show,
+							giftChannel ? giftChannel : session->user(),
 							savedId,
-							already,
 							true,
 							unique,
 							replaced);
 					});
 				} else {
-					ToggleStarGiftPinned(
+					session->recentSharedGifts().togglePinned(
 						show,
+						giftChannel ? giftChannel : session->user(),
 						savedId,
-						already,
 						true,
 						unique);
 				}
@@ -3129,7 +3072,6 @@ void AddWithdrawalWidget(
 	const auto buttonsContainer = withdrawalWrap->entity()->add(
 		Ui::CreateSkipWidget(withdrawalWrap->entity(), stButton.height),
 		st::boxRowPadding);
-	withdrawalWrap->toggle(withdrawalEnabled, anim::type::instant);
 
 	const auto button = Ui::CreateChild<Ui::RoundButton>(
 		buttonsContainer,
@@ -3142,14 +3084,47 @@ void AddWithdrawalWidget(
 		stButton);
 	buttonCredits->setTextTransform(
 		Ui::RoundButton::TextTransform::NoTransform);
+	{
+		const auto icon = Ui::CreateChild<Ui::RpWidget>(buttonCredits);
+		const auto &st = st::msgBotKbUrlIcon;
+		icon->resize(st.width(), st.height());
+		icon->paintRequest() | rpl::start_with_next([=] {
+			auto p = QPainter(icon);
+			st.paint(p, { 0, 0 }, icon->width(), stButton.textFg->c);
+		}, icon->lifetime());
+		buttonCredits->sizeValue(
+		) | rpl::start_with_next([=, padding = st::msgBotKbIconPadding] {
+			icon->moveToRight(padding, padding);
+		}, icon->lifetime());
+		icon->setAttribute(Qt::WA_TransparentForMouseEvents);
+	}
 
 	Ui::ToggleChildrenVisibility(buttonsContainer, true);
+
+	const auto updateButtonState = [=](bool disabled) {
+		button->setBrushOverride(disabled
+			? std::optional(st::windowSubTextFg)
+			: std::nullopt);
+		button->setAttribute(Qt::WA_TransparentForMouseEvents, disabled);
+	};
+
+	struct UrlState {
+		QString url;
+		base::unique_qptr<Ui::PopupMenu> menu;
+	};
+	const auto urlState = buttonsContainer->lifetime().make_state<UrlState>();
 
 	rpl::combine(
 		std::move(secondButtonUrl),
 		buttonsContainer->sizeValue()
 	) | rpl::start_with_next([=](const QString &url, const QSize &size) {
-		if (url.isEmpty()) {
+		const auto secondVisible = !url.isEmpty();
+		urlState->url = url;
+		withdrawalWrap->toggle(
+			withdrawalEnabled || secondVisible,
+			anim::type::instant);
+		updateButtonState(!withdrawalEnabled);
+		if (!secondVisible) {
 			button->resize(size.width(), size.height());
 			buttonCredits->resize(0, 0);
 		} else {
@@ -3160,6 +3135,27 @@ void AddWithdrawalWidget(
 			buttonCredits->setClickedCallback([=] {
 				UrlClickHandler::Open(url);
 			});
+			buttonCredits->events(
+			) | rpl::filter([](not_null<QEvent*> e) {
+				return e->type() == QEvent::ContextMenu;
+			}) | rpl::start_with_next([=](not_null<QEvent*> e) {
+				if (urlState->url.isEmpty()) {
+					return;
+				}
+				urlState->menu = base::make_unique_q<Ui::PopupMenu>(
+					buttonCredits,
+					st::popupMenuWithIcons);
+				urlState->menu->addAction(
+					tr::lng_context_copy_link(tr::now),
+					[=, show = controller->uiShow()] {
+						TextUtilities::SetClipboardText({ urlState->url });
+						show->showToast(
+							tr::lng_channel_public_link_copied(tr::now));
+					},
+					&st::menuIconCopy);
+				urlState->menu->popup(QCursor::pos());
+				e->accept();
+			}, buttonCredits->lifetime());
 		}
 	}, buttonsContainer->lifetime());
 
@@ -3170,7 +3166,9 @@ void AddWithdrawalWidget(
 	rpl::duplicate(
 		lockedValue
 	) | rpl::start_with_next([=](bool v) {
-		button->setAttribute(Qt::WA_TransparentForMouseEvents, v);
+		if (withdrawalEnabled) {
+			updateButtonState(v);
+		}
 	}, button->lifetime());
 
 	const auto session = &controller->session();
