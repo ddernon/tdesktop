@@ -8,6 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #pragma once
 
 #include "ui/rp_widget.h"
+#include "ui/effects/animations.h"
 
 namespace style {
 struct SubTabs;
@@ -47,6 +48,9 @@ public:
 
 	void setActiveTab(const QString &id);
 
+	void setReorderEnabled(bool enabled);
+	[[nodiscard]] bool reorderEnabled() const;
+
 	[[nodiscard]] rpl::producer<QString> activated() const;
 	[[nodiscard]] rpl::producer<QString> contextMenuRequests() const;
 
@@ -70,6 +74,7 @@ private:
 	void setSelected(int index);
 	void setActive(int index);
 	[[nodiscard]] QPoint scroll() const;
+	void shakeTransform(QPainter &p, int index, QPoint position, crl::time now) const;
 
 	const style::SubTabs &_st;
 	std::vector<Button> _buttons;
@@ -89,6 +94,8 @@ private:
 	int _pressed = -1;
 	int _active = -1;
 	bool _centered = false;
+	bool _reorderEnable = false;
+	Ui::Animations::Basic _shakeAnimation;
 
 };
 
