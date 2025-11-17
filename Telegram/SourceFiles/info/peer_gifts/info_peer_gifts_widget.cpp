@@ -274,6 +274,12 @@ private:
 
 	base::unique_qptr<Ui::PopupMenu> _menu;
 
+protected:
+	void focusOutEvent(QFocusEvent *e) override;
+
+private:
+	void cancelDragging();
+
 };
 
 InnerWidget::InnerWidget(
@@ -718,12 +724,21 @@ std::unique_ptr<GiftButton> InnerWidget::createGiftButton() {
 		case QEvent::MouseButtonPress:
 			raw->raise();
 			mousePressEvent(e);
+			if (e->isAccepted()) {
+				return;
+			}
 			break;
 		case QEvent::MouseMove:
 			mouseMoveEvent(e);
+			if (e->isAccepted()) {
+				return;
+			}
 			break;
 		case QEvent::MouseButtonRelease:
 			mouseReleaseEvent(e);
+			if (e->isAccepted()) {
+				return;
+			}
 			break;
 		default:
 			break;
@@ -886,6 +901,7 @@ void InnerWidget::validateButtons() {
 					const auto callback = [=] { showGift(_dragging.index); };
 					_draggedView->button->setClickedCallback(callback);
 				}
+				_draggedView->button->show();
 			} else {
 				_draggedView->index = _dragging.index;
 			}
@@ -894,10 +910,8 @@ void InnerWidget::validateButtons() {
 				QRect(pos, _single),
 				_delegate.buttonExtend());
 			_draggedView->button->raise();
-		} else {
-			_draggedView = nullptr;
 		}
-	} else {
+	} else if (!_dragging.enabled || _dragging.index < 0) {
 		_draggedView = nullptr;
 	}
 
@@ -1704,15 +1718,21 @@ void InnerWidget::mousePressEvent(QMouseEvent *e) {
 		_dragging.index = index;
 		_dragging.point = mapFromGlobal(e->globalPos()) - posFromIndex(index);
 		_dragging.startPos = e->globalPos();
+		grabMouse();
+		e->accept();
 		return;
 	}
 }
 
 void InnerWidget::mouseMoveEvent(QMouseEvent *e) {
-	updateSelected();
+	if (_dragging.index < 0) {
+		updateSelected();
+		return;
+	}
+
 	const auto draggedAnimating = isDraggedAnimating();
 
-	if (!_dragging.enabled && _dragging.index >= 0) {
+	if (!_dragging.enabled) {
 		const auto distance
 			= (e->globalPos() - _dragging.startPos).manhattanLength();
 		if (distance > QApplication::startDragDistance()) {
@@ -1720,12 +1740,19 @@ void InnerWidget::mouseMoveEvent(QMouseEvent *e) {
 		}
 	}
 
-	if (_selected >= 0 && !draggedAnimating) {
-		_dragging.lastSelected = _selected;
+	if (!_dragging.enabled) {
+		return;
 	}
 
-	if (_dragging.enabled
-		&& _dragging.index >= 0
+	e->accept();
+
+	const auto currentPos = e->globalPos();
+	const auto selected = giftFromGlobalPos(currentPos);
+	if (selected >= 0 && !draggedAnimating) {
+		_dragging.lastSelected = selected;
+	}
+
+	if (_dragging.index >= 0
 		&& _dragging.index < _list->size()
 		&& _dragging.lastSelected >= 0
 		&& !draggedAnimating) {
@@ -1735,22 +1762,22 @@ void InnerWidget::mouseMoveEvent(QMouseEvent *e) {
 			}
 			auto &entry = _shiftAnimations[i];
 			const auto wasShift = entry.shift;
-			if ((i >= _dragging.index) && (i <= _dragging.lastSelected)) {
-				if (entry.shift == 0) {
+			const auto dragIndex = _dragging.index;
+			const auto targetIndex = _dragging.lastSelected;
+
+			if (dragIndex < targetIndex) {
+				if (i > dragIndex && i <= targetIndex) {
 					entry.shift = -1;
-				} else if (entry.shift == 1) {
+				} else {
 					entry.shift = 0;
 				}
-			} else if ((i < _dragging.index)
-					&& (i >= _dragging.lastSelected)) {
-				if (entry.shift == 0) {
+			} else if (dragIndex > targetIndex) {
+				if (i >= targetIndex && i < dragIndex) {
 					entry.shift = 1;
-				} else if (entry.shift == -1) {
+				} else {
 					entry.shift = 0;
 				}
-			}
-			if ((i < std::min(_dragging.index, _dragging.lastSelected))
-				|| (i > std::max(_dragging.index, _dragging.lastSelected))) {
+			} else {
 				entry.shift = 0;
 			}
 			if (wasShift != entry.shift) {
@@ -1820,22 +1847,13 @@ void InnerWidget::mouseMoveEvent(QMouseEvent *e) {
 			if (view.index >= 0 && view.button) {
 				auto pos = posFromIndex(view.index);
 
-				if (view.index == _dragging.index && !isDraggedAnimating()) {
-					pos = mapFromGlobal(QCursor::pos()) - _dragging.point;
-				} else if (view.index == _dragging.index
-					&& isDraggedAnimating()) {
-					const auto it = _shiftAnimations.find(view.index);
-					if (it != _shiftAnimations.end()) {
-						pos = QPoint(
-							it->second.xAnimation.value(pos.x()),
-							it->second.yAnimation.value(pos.y()));
-					}
+				if (view.index == _dragging.index) {
+					pos = mapFromGlobal(currentPos) - _dragging.point;
 				} else {
 					const auto it = _shiftAnimations.find(view.index);
 					if (it != _shiftAnimations.end()) {
 						const auto &entry = it->second;
-						const auto toPos
-							= posFromIndex(view.index + entry.shift);
+						const auto toPos = posFromIndex(view.index + entry.shift);
 						pos = QPoint(
 							entry.xAnimation.value(toPos.x()),
 							entry.yAnimation.value(toPos.y()));
@@ -1846,7 +1864,7 @@ void InnerWidget::mouseMoveEvent(QMouseEvent *e) {
 		}
 
 		if (_draggedView && _draggedView->button) {
-			auto pos = mapFromGlobal(QCursor::pos()) - _dragging.point;
+			auto pos = mapFromGlobal(currentPos) - _dragging.point;
 			_draggedView->button->moveToLeft(pos.x(), pos.y());
 			_draggedView->button->raise();
 		}
@@ -1856,15 +1874,21 @@ void InnerWidget::mouseMoveEvent(QMouseEvent *e) {
 }
 
 void InnerWidget::mouseReleaseEvent(QMouseEvent *e) {
+	if (mouseGrabber() == this) {
+		releaseMouse();
+	}
+
 	if (_dragging.enabled && _dragging.index >= 0 && !isDraggedAnimating()) {
 		for (auto &[index, entry] : _shiftAnimations) {
 			if (index != _dragging.index) {
 				entry.xAnimation.stop();
 				entry.yAnimation.stop();
-				if (auto view = ranges::find(_views, index, &View::index);
-					view != end(_views) && view->button) {
-					const auto finalPos = posFromIndex(index + entry.shift);
-					view->button->moveToLeft(finalPos.x(), finalPos.y());
+				for (auto &view : _views) {
+					if (view.index == index && view.button) {
+						const auto finalPos = posFromIndex(index + entry.shift);
+						view.button->moveToLeft(finalPos.x(), finalPos.y());
+						break;
+					}
 				}
 			}
 		}
@@ -1881,9 +1905,13 @@ void InnerWidget::mouseReleaseEvent(QMouseEvent *e) {
 					wasPosition,
 					nowPosition);
 			}
+			if (_draggedView) {
+				_draggedView->index = nowPosition;
+			}
 			requestReorder(wasPosition, nowPosition);
 			_dragging = {};
 			_shiftAnimations.clear();
+			refreshButtons();
 		};
 		auto &entry = _shiftAnimations[_dragging.index];
 		entry.xAnimation.stop();
@@ -1891,10 +1919,11 @@ void InnerWidget::mouseReleaseEvent(QMouseEvent *e) {
 		entry.xAnimation.start(
 			[finish, toPos, this](float64 value) {
 				const auto index = _dragging.index;
-				if (value >= toPos.x()
+				if (std::abs(value - toPos.x()) < 1.0
 					&& index >= 0
 					&& !_shiftAnimations[index].yAnimation.animating()) {
 					finish();
+					return;
 				}
 				for (auto &view : _views) {
 					if (view.index == index && view.button) {
@@ -1915,10 +1944,11 @@ void InnerWidget::mouseReleaseEvent(QMouseEvent *e) {
 		entry.yAnimation.start(
 			[finish, toPos, this](float64 value) {
 				const auto index = _dragging.index;
-				if (value >= toPos.y()
+				if (std::abs(value - toPos.y()) < 1.0
 					&& index >= 0
 					&& !_shiftAnimations[index].xAnimation.animating()) {
 					finish();
+					return;
 				}
 				for (auto &view : _views) {
 					if (view.index == index && view.button) {
@@ -1937,16 +1967,21 @@ void InnerWidget::mouseReleaseEvent(QMouseEvent *e) {
 			toPos.y(),
 			st::fadeWrapDuration);
 	} else {
+		const auto index = giftFromGlobalPos(e->globalPos());
 		_dragging = {};
 		_shiftAnimations.clear();
-		const auto index = giftFromGlobalPos(e->globalPos());
+		_draggedView = nullptr;
 		if (index >= 0 && index < _list->size()) {
 			showGift(index);
 		}
+		refreshButtons();
 	}
 }
 
 void InnerWidget::updateSelected() {
+	if (_dragging.enabled) {
+		return;
+	}
 	const auto selected = giftFromGlobalPos(QCursor::pos());
 	if (_selected != selected) {
 		_selected = selected;
@@ -2052,6 +2087,25 @@ void InnerWidget::reorderCollections(
 		const Ui::SubTabs::ReorderUpdate &update) {
 	reorderCollectionsLocally(update);
 	flushCollectionReorder();
+}
+
+void InnerWidget::focusOutEvent(QFocusEvent *e) {
+	if (_dragging.enabled) {
+		cancelDragging();
+	}
+	BoxContentDivider::focusOutEvent(e);
+}
+
+void InnerWidget::cancelDragging() {
+	if (mouseGrabber() == this) {
+		releaseMouse();
+	}
+	_dragging = {};
+	_shiftAnimations.clear();
+	if (_draggedView) {
+		_draggedView = nullptr;
+	}
+	refreshButtons();
 }
 
 Memento::Memento(not_null<Controller*> controller)
