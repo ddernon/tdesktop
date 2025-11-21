@@ -156,7 +156,8 @@ void ShareBotGame(
 			MTP_long(randomId),
 			MTPReplyMarkup(),
 			MTPVector<MTPMessageEntity>(),
-			MTP_int(0), // schedule_date
+			MTPint(), // schedule_date
+			MTPint(), // schedule_repeat_period
 			MTPInputPeer(), // send_as
 			MTPInputQuickReplyShortcut(),
 			MTPlong(),
@@ -268,7 +269,7 @@ private:
 	void addSupportInfo();
 	void addInfo();
 	void addStoryArchive();
-	void addNewWindow();
+	void addNewWindow(bool addSeparator = true);
 	void addToggleFolder();
 	void addToggleUnreadMark();
 	void addToggleArchive();
@@ -661,7 +662,7 @@ void Filler::addToggleUnreadMark() {
 	}, (unread ? &st::menuIconMarkRead : &st::menuIconMarkUnread));
 }
 
-void Filler::addNewWindow() {
+void Filler::addNewWindow(bool addSeparator) {
 	const auto controller = _controller;
 	if (_folder) {
 		_addAction(tr::lng_context_new_window(tr::now), [=] {
@@ -670,7 +671,9 @@ void Filler::addNewWindow() {
 				SeparateType::Archive,
 				&controller->session()));
 		}, &st::menuIconNewWindow);
-		AddSeparatorAndShiftUp(_addAction);
+		if (addSeparator) {
+			AddSeparatorAndShiftUp(_addAction);
+		}
 		return;
 	} else if (const auto weak = base::make_weak(_sublist)) {
 		_addAction(tr::lng_context_new_window(tr::now), [=] {
@@ -681,7 +684,9 @@ void Filler::addNewWindow() {
 					sublist));
 			}
 		}, &st::menuIconNewWindow);
-		AddSeparatorAndShiftUp(_addAction);
+		if (addSeparator) {
+			AddSeparatorAndShiftUp(_addAction);
+		}
 		return;
 	}
 	const auto history = _request.key.history();
@@ -707,7 +712,9 @@ void Filler::addNewWindow() {
 				strong));
 		}
 	}, &st::menuIconNewWindow);
-	AddSeparatorAndShiftUp(_addAction);
+	if (addSeparator) {
+		AddSeparatorAndShiftUp(_addAction);
+	}
 }
 
 void Filler::addToggleArchive() {
@@ -1073,12 +1080,15 @@ void Filler::addTopicLink() {
 		return;
 	}
 	const auto controller = _controller;
+	const auto weak = base::make_weak(_topic);
 	_addAction(tr::lng_context_copy_topic_link(tr::now), [=] {
-		const auto link = Info::Profile::TopicLink(_topic, true);
-		QGuiApplication::clipboard()->setText(link);
-		controller->showToast(channel->hasUsername()
-			? tr::lng_channel_public_link_copied(tr::now)
-			: tr::lng_context_about_private_link(tr::now));
+		if (const auto strong = weak.get()) {
+			const auto link = Info::Profile::TopicLink(strong, true);
+			QGuiApplication::clipboard()->setText(link);
+			controller->showToast(channel->hasUsername()
+				? tr::lng_channel_public_link_copied(tr::now)
+				: tr::lng_context_about_private_link(tr::now));
+		}
 	}, &st::menuIconCopy);
 }
 
@@ -1659,7 +1669,7 @@ void Filler::fillArchiveActions() {
 }
 
 void Filler::fillSavedSublistActions() {
-	addNewWindow();
+	addNewWindow(false);
 	addTogglePin();
 }
 
