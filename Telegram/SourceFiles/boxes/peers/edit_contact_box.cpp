@@ -484,6 +484,9 @@ void Controller::setupNotesField() {
 }
 
 void Controller::setupPhotoButtons() {
+	if (!_user->isContact()) {
+		return;
+	}
 	const auto iconPlaceholder = st::restoreUserpicIcon.size * 2;
 	auto nameValue = _firstNameField
 		? rpl::merge(
@@ -515,7 +518,8 @@ void Controller::setupPhotoButtons() {
 				.sessionWindow = base::make_weak(_window),
 			}));
 	});
-	suggestBirthdayWrap->toggleOn(rpl::single(!_user->birthday().valid()));
+	suggestBirthdayWrap->toggleOn(rpl::single(!_user->birthday().valid()
+		&& !_user->starsPerMessageChecked()));
 
 	_suggestIcon = Ui::MakeAnimatedIcon({
 		.generator = [] {
@@ -539,8 +543,15 @@ void Controller::setupPhotoButtons() {
 		.colorized = true,
 	});
 
+	const auto suggestButtonWrap = inner->add(
+		object_ptr<Ui::SlideWrap<Ui::VerticalLayout>>(
+			inner,
+			object_ptr<Ui::VerticalLayout>(inner)));
+	suggestButtonWrap->toggleOn(
+		rpl::single(!_user->starsPerMessageChecked()));
+
 	const auto suggestButton = Settings::AddButtonWithIcon(
-		inner,
+		suggestButtonWrap->entity(),
 		tr::lng_suggest_photo_for(lt_user, rpl::duplicate(nameValue)),
 		st::settingsButtonLight,
 		{ nullptr });
