@@ -1654,7 +1654,7 @@ mac:
     make install
 """)
 else: # qt > '6'
-    branch = 'v$QT' + ('-lts-lgpl' if qt < '6.3' else '')
+    branch = 'v$QT' + ('-lts-lgpl' if qt.startswith('6.2.') else '')
     stage('qt_' + qt, """
     git clone -b """ + branch + """ https://github.com/qt/qt5.git qt_$QT
     cd qt_$QT
@@ -1683,8 +1683,6 @@ mac:
         -I "$USED_PREFIX/include" \
         -no-feature-futimens \
         -no-feature-brotli \
-        -nomake examples \
-        -nomake tests \
         -platform macx-clang -- \
         -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
         -DCMAKE_PREFIX_PATH="$USED_PREFIX"
@@ -1714,13 +1712,10 @@ win:
         -static ^
         -static-runtime ^
         -feature-c++20 ^
-        -no-sbom ^
         -openssl linked ^
         -system-webp ^
         -system-zlib ^
         -system-libjpeg ^
-        -nomake examples ^
-        -nomake tests ^
         -platform win32-msvc ^
         -D ZLIB_WINAPI ^
         -- ^
