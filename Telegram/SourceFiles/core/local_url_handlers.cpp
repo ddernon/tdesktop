@@ -2126,6 +2126,8 @@ void ResolveAndShowUniqueGift(
 		const auto &data = result.data();
 		session->data().processUsers(data.vusers());
 		if (const auto gift = Api::FromTL(session, data.vgift())) {
+			Core::App().hideMediaView();
+
 			using namespace ::Settings;
 			show->show(Box(
 				GlobalStarGiftBox,
@@ -2133,6 +2135,7 @@ void ResolveAndShowUniqueGift(
 				*gift,
 				StarGiftResaleInfo(),
 				st));
+			show->activate();
 		}
 	}).fail([=](const MTP::Error &error) {
 		clear();
