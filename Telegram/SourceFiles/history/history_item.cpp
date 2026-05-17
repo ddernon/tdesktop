@@ -3140,7 +3140,7 @@ bool HistoryItem::canReact() const {
 	}
 	const auto peer = history()->peer;
 	return (peer->isChat() || peer->isMegagroup())
-	    ? Data::CanSend(peer, ChatRestriction::SendReactions, false)
+		? !peer->amRestricted(ChatRestriction::SendReactions)
 		: true;
 }
 
