@@ -35,7 +35,6 @@ on:
       - 'Telegram/SourceFiles/platform/win/**'
       - 'Telegram/SourceFiles/platform/linux/**'
       - 'Telegram/configure.bat'
-  workflow_dispatch:
 
 jobs:
 
@@ -68,8 +67,7 @@ jobs:
 
           brew update
           brew upgrade || true
-          brew uninstall cmake
-          brew install automake meson nasm ninja pkg-config
+          brew install automake libtool meson nasm ninja pkg-config
 
           # Disable spotlight.
           sudo mdutil -a -i off
