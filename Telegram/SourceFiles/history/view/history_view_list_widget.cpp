@@ -1780,7 +1780,6 @@ Element *ListWidget::lookupItemByY(int y) const {
 not_null<HistoryItem*> ListWidget::lookupItemByPoint(
 		QPoint point,
 		not_null<Element*> view) const {
-	point -= QPoint(SelectionViewOffset(this, view), 0);
 	return LookupItemByPoint(view, mapPointToItem(point, view));
 }
 
@@ -4225,9 +4224,6 @@ void ListWidget::mouseActionUpdate() {
 		? replyBtnView
 		: strictFindItemByY(point.y());
 	const auto item = view ? view->data().get() : nullptr;
-	if (view) {
-		point -= QPoint(SelectionViewOffset(this, view), 0);
-	}
 	const auto itemPoint = mapPointToItem(point, view);
 	_overState = MouseState(
 		item ? item->fullId() : FullMsgId(),
@@ -4885,7 +4881,8 @@ QPoint ListWidget::mapPointToItem(
 	if (!view) {
 		return QPoint();
 	}
-	return point - QPoint(0, itemTop(view));
+	return point
+		- QPoint(SelectionViewOffset(this, view), itemTop(view));
 }
 
 rpl::producer<FullMsgId> ListWidget::editMessageRequested() const {
