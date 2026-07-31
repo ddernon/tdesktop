@@ -995,7 +995,7 @@ void Updates::updateOnline(crl::time lastNonIdleTime, bool gotOtherOffline) {
 
 	const auto &config = _session->serverConfig();
 	bool isOnline = Core::App().hasActiveWindow(&session());
-	isOnline = false;
+	// isOnline = false;
 	int updateIn = config.onlineUpdatePeriod;
 	Assert(updateIn >= 0);
 	if (isOnline) {
@@ -1021,11 +1021,13 @@ void Updates::updateOnline(crl::time lastNonIdleTime, bool gotOtherOffline) {
 		_lastSetOnline = ms;
 		if (!Core::Quitting()) {
 			_onlineRequest = api().request(MTPaccount_UpdateStatus(
-				MTP_bool(!isOnline)
+				// MTP_bool(!isOnline)
+				MTP_bool(true)
 			)).send();
 		} else {
 			_onlineRequest = api().request(MTPaccount_UpdateStatus(
-				MTP_bool(!isOnline)
+				// MTP_bool(!isOnline)
+				MTP_bool(true)
 			)).done([=] {
 				Core::App().quitPreventFinished();
 			}).fail([=] {
