@@ -135,6 +135,16 @@ void InstallQtMessageHandler() {
 		if (original) {
 			original(type, context, message);
 		}
+		if (type == QtWarningMsg || type == QtCriticalMsg) {
+			// Qt writes these to the debugger only, but they carry the RHI
+			// and DirectComposition diagnostics we need from user reports.
+			static thread_local auto inside = false;
+			if (!inside) {
+				inside = true;
+				LOG(("Qt: %1").arg(message));
+				inside = false;
+			}
+		}
 		if (type == QtFatalMsg) {
 			CrashReports::SetAnnotation("QtFatal", message);
 			Unexpected("Qt FATAL message was generated!");

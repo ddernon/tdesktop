@@ -4857,7 +4857,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_emoji_create_new" = "Create a New Emoji";
 "lng_emoji_add_existing" = "Add an Existing Emoji";
 "lng_emoji_adapt_sticker" = "Adapt from a Sticker";
-"lng_emoji_adapt_no_video" = "Video stickers are not supported yet.";
 "lng_stickers_add_to_set" = "Add to Sticker Set";
 "lng_stickers_already_in_set" = "This Sticker is already in the Set.";
 "lng_stickers_set_is_full" = "This Sticker Set is full.";
@@ -5917,11 +5916,15 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_drag_photos_here" = "Drop photos here";
 "lng_drag_files_here" = "Drop files here";
 "lng_drag_media_here" = "Drop photos and videos";
+"lng_drag_folder_here" = "Drop folder here";
 
 "lng_drag_to_send_quick" = "to send them in a quick way";
 "lng_drag_to_send_no_compression" = "to send them without compression";
 "lng_drag_to_send_files" = "to send them as documents";
 "lng_drag_to_send_media" = "to send them as media files";
+"lng_drag_to_send_folder" = "to send it as an archive";
+"lng_drag_to_send_folder_files" = "to send all its files";
+"lng_drag_to_send_files_archive" = "to send them as one archive";
 
 "lng_drag_proxy_here" = "Connect to a proxy";
 "lng_drag_proxy_about" = "Drop the link here";
@@ -8754,5 +8757,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_rich_paste_toast_open" = "Open";
 "lng_rich_paste_toast_undo" = "Undo";
 "lng_rich_paste_toast_apply" = "Apply";
+
+"lng_folder_archive_failed" = "Failed to create archive.";
+"lng_folder_archive_status" = "ZIP archive";
 
 // Keys finished

@@ -94,6 +94,13 @@ Window::Window()
 	_controlsTop.value()))
 #endif // !Q_OS_MAC
 {
+#ifdef Q_OS_WIN
+	// Own the frameless flag, or pre-Win8 helper brings back native frame
+	// with hidden title and paints second title row over our controls.
+	window()->setManualFramelessOwned(true);
+	window()->setNativeFrame(true);
+	window()->setWindowFlag(Qt::FramelessWindowHint);
+#endif // Q_OS_WIN
 	_layerBg->setStyleOverrides(&st::groupCallBox, &st::groupCallLayerBox);
 	_layerBg->setHideByBackgroundClick(true);
 }

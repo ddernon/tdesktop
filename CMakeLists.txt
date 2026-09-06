@@ -55,6 +55,25 @@ include(cmake/validate_d3d_compiler.cmake)
 include(cmake/target_prepare_qrc.cmake)
 
 include(cmake/options.cmake)
+
+# Nested: `if' expands all arguments, QT must be read only when set.
+if (WIN32 AND NOT build_winarm AND NOT build_winstore AND DEFINED ENV{QT})
+    if (NOT "$ENV{QT}" VERSION_LESS 6)
+        # Windows 7 and 8 need YY-Thunks and ANGLE, ARM64 and store do not.
+        # Not an option: prepare.py builds Qt with EGL against tg_angle.
+        set(DESKTOP_APP_WIN7_BASELINE TRUE)
+
+        set(angle_loc ${libs_loc}/tg_angle)
+        set(angle_lib ${angle_loc}/out/Release/tg_angle.lib)
+        set(HAVE_EGL ON CACHE BOOL "ANGLE provides EGL")
+        set(EGL_INCLUDE_DIR ${angle_loc}/include CACHE PATH "ANGLE headers")
+        set(EGL_LIBRARY ${angle_lib} CACHE FILEPATH "ANGLE library")
+        set(HAVE_GLESv2 ON CACHE BOOL "ANGLE provides OpenGL ES 2")
+        set(GLESv2_INCLUDE_DIR ${angle_loc}/include CACHE PATH "ANGLE headers")
+        set(GLESv2_LIBRARY ${angle_lib} CACHE FILEPATH "ANGLE library")
+    endif()
+endif()
+
 include(cmake/external/qt/package.cmake)
 
 set(desktop_app_skip_libs

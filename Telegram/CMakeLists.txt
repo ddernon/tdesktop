@@ -1933,6 +1933,8 @@ PRIVATE
     storage/storage_domain.h
     storage/storage_facade.cpp
     storage/storage_facade.h
+    storage/storage_folder_archive.cpp
+    storage/storage_folder_archive.h
     storage/storage_media_prepare.cpp
     storage/storage_media_prepare.h
     storage/storage_shared_media.cpp
@@ -2252,11 +2254,56 @@ if (WIN32)
     #     $<IF:${release},"Appending compatibility manifest.","Finalizing build.">
     # )
 
-    if (QT_VERSION LESS 6)
+    if (QT_VERSION LESS 6 OR DESKTOP_APP_WIN7_BASELINE)
         target_link_libraries(Telegram PRIVATE desktop-app::win_directx_helper)
     endif()
 
-    target_link_options(Telegram PRIVATE /PDBPAGESIZE:8192)
+    if (DESKTOP_APP_WIN7_BASELINE)
+        # ANGLE loads the compiler by bare name, so it goes next to the exe.
+        if (build_win64)
+            set(d3d_modules_subdir x64)
+        else()
+            set(d3d_modules_subdir x86)
+        endif()
+        set(d3d_modules_dir $<TARGET_FILE_DIR:Telegram>/modules/${d3d_modules_subdir}/d3d)
+        add_custom_command(TARGET Telegram POST_BUILD
+        COMMAND
+            ${CMAKE_COMMAND} -E make_directory ${d3d_modules_dir}
+        COMMAND
+            ${CMAKE_COMMAND} -E copy_if_different
+            ${cmake_helpers_loc}/win_directx_helper/modules/${d3d_modules_subdir}/d3d/d3dcompiler_47.dll
+            ${d3d_modules_dir}/d3dcompiler_47.dll
+        COMMENT
+            "Copying d3dcompiler_47.dll for ANGLE."
+        VERBATIM
+        )
+    endif()
+
+    target_link_options(Telegram PRIVATE /PDBPAGESIZE:32768)
+
+    set(yy_thunks_lib "")
+    if (DESKTOP_APP_WIN7_BASELINE)
+        if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(yy_thunks_arch x64)
+        else()
+            set(yy_thunks_arch x86)
+        endif()
+        set(yy_thunks_candidate "${libs_loc}/yy_thunks/objs/${yy_thunks_arch}/YY_Thunks_for_Win7.lib")
+        if (NOT EXISTS "${yy_thunks_candidate}")
+            message(FATAL_ERROR "YY-Thunks library not found at ${yy_thunks_candidate}. Run Telegram/build/prepare/prepare.py to build it.")
+        endif()
+        message(STATUS "YY-Thunks: enabling Windows 7/8 compatibility via ${yy_thunks_candidate}")
+        set(yy_thunks_lib "${yy_thunks_candidate}")
+
+        # Three optional hooks are weak in a stock build, define defaults.
+        add_library(yy_thunks_defaults STATIC
+            ${src_loc}/_other/yy_thunks_defaults.cpp)
+        set_target_properties(yy_thunks_defaults PROPERTIES FOLDER "(external)")
+
+        # Whole archive: a plain link takes only already undefined symbols.
+        target_link_options(Telegram PRIVATE "/WHOLEARCHIVE:${yy_thunks_lib}" /FORCE:MULTIPLE /IGNORE:4006 /SUBSYSTEM:WINDOWS,6.01)
+        target_link_libraries(Telegram PRIVATE yy_thunks_defaults)
+    endif()
 elseif (APPLE)
     if (NOT DESKTOP_APP_USE_PACKAGED)
         target_link_libraries(Telegram PRIVATE desktop-app::external_iconv)
@@ -2442,7 +2489,6 @@ if (MSVC)
         /DELAYLOAD:ws2_32.dll
         /DELAYLOAD:user32.dll
         /DELAYLOAD:gdi32.dll
-        /DELAYLOAD:advapi32.dll
         /DELAYLOAD:avrt.dll
         /DELAYLOAD:shell32.dll
         /DELAYLOAD:ole32.dll
@@ -2462,7 +2508,11 @@ if (MSVC)
         /DELAYLOAD:wtsapi32.dll
         /DELAYLOAD:propsys.dll
     )
-    if (QT_VERSION GREATER 6)
+    # YY-Thunks covers imports bound at link time, not delayed ones.
+    if (NOT DESKTOP_APP_WIN7_BASELINE)
+        target_link_options(Telegram PRIVATE /DELAYLOAD:advapi32.dll)
+    endif()
+    if (QT_VERSION GREATER 6 AND NOT DESKTOP_APP_WIN7_BASELINE)
         if (NOT build_winarm)
             target_link_options(Telegram PRIVATE
                 /DELAYLOAD:API-MS-Win-EventLog-Legacy-l1-1-0.dll
@@ -2489,6 +2539,11 @@ if (MSVC)
             /DELAYLOAD:API-MS-Win-Core-WinRT-String-l1-1-0.dll
             /DELAYLOAD:API-MS-Win-Security-CryptoAPI-l1-1-0.dll
             # /DELAYLOAD:API-MS-Win-Shcore-Scaling-l1-1-1.dll # We shadowed GetDpiForMonitor
+        )
+    endif()
+    if (QT_VERSION GREATER 6)
+        target_link_options(Telegram
+        PRIVATE
             /DELAYLOAD:authz.dll # Authz.lib
             /DELAYLOAD:comdlg32.dll
             /DELAYLOAD:dwrite.dll # DWrite.lib
@@ -2538,13 +2593,19 @@ if (NOT DESKTOP_APP_DISABLE_AUTOUPDATE AND NOT build_macstore AND NOT build_wins
             target_link_options(Updater
             PRIVATE
                 /DELAYLOAD:user32.dll
-                /DELAYLOAD:advapi32.dll
                 /DELAYLOAD:shell32.dll
                 /DELAYLOAD:ole32.dll
                 /DELAYLOAD:shlwapi.dll
             )
+            if (NOT DESKTOP_APP_WIN7_BASELINE)
+                target_link_options(Updater PRIVATE /DELAYLOAD:advapi32.dll)
+            endif()
         else()
             target_link_options(Updater PRIVATE -municode)
+        endif()
+        if (yy_thunks_lib)
+            target_link_options(Updater PRIVATE "/WHOLEARCHIVE:${yy_thunks_lib}" /FORCE:MULTIPLE /IGNORE:4006 /SUBSYSTEM:WINDOWS,6.01)
+            target_link_libraries(Updater PRIVATE yy_thunks_defaults)
         endif()
     elseif (APPLE)
         add_custom_command(TARGET Updater
@@ -2580,6 +2641,11 @@ if (NOT DESKTOP_APP_DISABLE_AUTOUPDATE AND NOT build_macstore AND NOT build_wins
 
         if (DESKTOP_APP_USE_PACKAGED)
             target_compile_definitions(Packer PRIVATE PACKER_USE_PACKAGED)
+        endif()
+
+        if (WIN32 AND yy_thunks_lib)
+            target_link_options(Packer PRIVATE "/WHOLEARCHIVE:${yy_thunks_lib}" /FORCE:MULTIPLE /IGNORE:4006 /SUBSYSTEM:CONSOLE,6.01)
+            target_link_libraries(Packer PRIVATE yy_thunks_defaults)
         endif()
 
         set_target_properties(Packer PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${output_folder})
