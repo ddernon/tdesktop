@@ -870,11 +870,25 @@ PRIVATE
     dialogs/suggestions/suggestion_userpic_setup.cpp
     dialogs/dialogs_widget.cpp
     dialogs/dialogs_widget.h
+    editor/audio_track_timeline.cpp
+    editor/audio_track_timeline.h
     editor/color_picker.cpp
     editor/color_picker.h
     editor/controllers/controllers.h
     editor/controllers/stickers_panel_controller.cpp
     editor/controllers/stickers_panel_controller.h
+    editor/editor_audio_timeline.cpp
+    editor/editor_audio_timeline.h
+    editor/editor_keys_legend.cpp
+    editor/editor_keys_legend.h
+    editor/editor_link_box.cpp
+    editor/editor_link_box.h
+    editor/editor_message_render.cpp
+    editor/editor_message_render.h
+    editor/editor_message_source.cpp
+    editor/editor_message_source.h
+    editor/editor_message_video.cpp
+    editor/editor_message_video.h
     editor/editor_paint.cpp
     editor/editor_paint.h
     editor/photo_editor.cpp
@@ -885,8 +899,14 @@ PRIVATE
     editor/photo_editor_controls.h
     editor/photo_editor_layer_widget.cpp
     editor/photo_editor_layer_widget.h
+    editor/scene/scene_item_message.cpp
+    editor/scene/scene_item_message.h
     editor/scene/scene_item_sticker.cpp
     editor/scene/scene_item_sticker.h
+    editor/scene/scene_item_video.cpp
+    editor/scene/scene_item_video.h
+    editor/video/video_clip.cpp
+    editor/video/video_clip.h
     editor/video/video_editor.cpp
     editor/video/video_editor.h
     editor/video/video_editor_common.cpp
@@ -897,8 +917,14 @@ PRIVATE
     editor/video/video_editor_quality.h
     editor/video/video_quality_slider.cpp
     editor/video/video_quality_slider.h
+    editor/video/video_segment_player.cpp
+    editor/video/video_segment_player.h
     editor/video/video_timeline.cpp
     editor/video/video_timeline.h
+    editor/video/video_timeline_seeker.cpp
+    editor/video/video_timeline_seeker.h
+    editor/video_item_timeline.cpp
+    editor/video_item_timeline.h
     export/export_manager.cpp
     export/export_manager.h
     export/view/export_view_content.cpp
@@ -2269,11 +2295,37 @@ if (WIN32)
     #     $<IF:${release},"Appending compatibility manifest.","Finalizing build.">
     # )
 
-    if (QT_VERSION LESS 6)
+    if (QT_VERSION LESS 6 OR DESKTOP_APP_WIN7_BASELINE)
         target_link_libraries(Telegram PRIVATE desktop-app::win_directx_helper)
     endif()
 
+    if (DESKTOP_APP_WIN7_BASELINE)
+        # ANGLE loads d3dcompiler_47.dll from modules folder next to exe.
+        if (build_win64)
+            set(d3d_modules_subdir x64)
+        else()
+            set(d3d_modules_subdir x86)
+        endif()
+        set(d3d_modules_dir $<TARGET_FILE_DIR:Telegram>/modules/${d3d_modules_subdir}/d3d)
+        add_custom_command(TARGET Telegram POST_BUILD
+        COMMAND
+            ${CMAKE_COMMAND} -E make_directory ${d3d_modules_dir}
+        COMMAND
+            ${CMAKE_COMMAND} -E copy_if_different
+            ${cmake_helpers_loc}/win_directx_helper/modules/${d3d_modules_subdir}/d3d/d3dcompiler_47.dll
+            ${d3d_modules_dir}/d3dcompiler_47.dll
+        COMMENT
+            "Copying d3dcompiler_47.dll for ANGLE."
+        VERBATIM
+        )
+    endif()
+
     target_link_options(Telegram PRIVATE /PDBPAGESIZE:8192)
+
+    if (DESKTOP_APP_WIN7_BASELINE)
+        # The loader reads the subsystem version as the minimal Windows.
+        target_link_options(Telegram PRIVATE /SUBSYSTEM:WINDOWS,6.01)
+    endif()
 elseif (APPLE)
     if (NOT DESKTOP_APP_USE_PACKAGED)
         target_link_libraries(Telegram PRIVATE desktop-app::external_iconv)
@@ -2563,6 +2615,9 @@ if (NOT DESKTOP_APP_DISABLE_AUTOUPDATE AND NOT build_macstore AND NOT build_wins
         else()
             target_link_options(Updater PRIVATE -municode)
         endif()
+        if (DESKTOP_APP_WIN7_BASELINE)
+            target_link_options(Updater PRIVATE /SUBSYSTEM:WINDOWS,6.01)
+        endif()
     elseif (APPLE)
         add_custom_command(TARGET Updater
         POST_BUILD
@@ -2597,6 +2652,12 @@ if (NOT DESKTOP_APP_DISABLE_AUTOUPDATE AND NOT build_macstore AND NOT build_wins
 
         if (DESKTOP_APP_USE_PACKAGED)
             target_compile_definitions(Packer PRIVATE PACKER_USE_PACKAGED)
+        endif()
+
+        if (WIN32 AND DESKTOP_APP_WIN7_BASELINE)
+            # WindowsApp.lib is off the link line, WinRT stubs come from lib_base.
+            target_link_libraries(Packer PRIVATE desktop-app::lib_base)
+            target_link_options(Packer PRIVATE /SUBSYSTEM:CONSOLE,6.01)
         endif()
 
         set_target_properties(Packer PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${output_folder})

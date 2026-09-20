@@ -66,6 +66,7 @@ struct PreparedFileArchive {
 	QString folder;
 	QString root;
 	QStringList paths;
+	QStringList names;
 };
 
 struct PreparedFile {
@@ -95,6 +96,7 @@ struct PreparedFile {
 	[[nodiscard]] bool isGifv() const;
 	[[nodiscard]] bool canUseHighQualityPhoto() const;
 	[[nodiscard]] bool hasAnimatedEditScene() const;
+	[[nodiscard]] bool hasAudioEditScene() const;
 	[[nodiscard]] bool sendsVideoAsGif() const;
 
 	[[nodiscard]] bool canEditVideo() const;
@@ -116,6 +118,7 @@ struct PreparedFile {
 	Type type = Type::File;
 	crl::time ttlSeconds = 0;
 	bool spoiler = false;
+	bool selected = false;
 	bool sendLargePhotos = false;
 	std::shared_ptr<Media::Encode::Job> animationJob;
 	std::shared_ptr<PreparedFileArchive> archive;
