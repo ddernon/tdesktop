@@ -7,6 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "settings/sections/settings_privacy_security.h"
 
+#include "settings/settings_common_session.h"
+
 #include "api/api_authorizations.h"
 #include "api/api_blocked_peers.h"
 #include "api/api_cloud_password.h"
@@ -1791,16 +1793,29 @@ void BuildPrivacySecuritySectionContent(SectionBuilder &builder) {
 	BuildSelfDestructionSection(builder, trigger());
 }
 
+class PrivacySecurity : public Section<PrivacySecurity> {
+public:
+	PrivacySecurity(
+		QWidget *parent,
+		not_null<Window::SessionController*> controller);
+
+	[[nodiscard]] rpl::producer<QString> title() override;
+
+private:
+	void setupContent();
+
+};
+
 const auto kMeta = BuildHelper({
 	.id = PrivacySecurity::Id(),
-	.parentId = Main::Id(),
+	.parentId = MainId(),
 	.title = &tr::lng_settings_section_privacy,
 	.icon = &st::menuIconLock,
 }, [](SectionBuilder &builder) {
 	BuildPrivacySecuritySectionContent(builder);
 });
 
-} // namespace
+const SectionBuildMethod kPrivacySecuritySection = kMeta.build;
 
 PrivacySecurity::PrivacySecurity(
 	QWidget *parent,
@@ -1816,13 +1831,14 @@ rpl::producer<QString> PrivacySecurity::title() {
 
 void PrivacySecurity::setupContent() {
 	const auto content = Ui::CreateChild<Ui::VerticalLayout>(this);
-	build(content, Builder::PrivacySecuritySection);
+	build(content, kPrivacySecuritySection);
 	Ui::ResizeFitChild(this, content);
 }
 
-namespace Builder {
+} // namespace
 
-SectionBuildMethod PrivacySecuritySection = kMeta.build;
+Type PrivacySecurityId() {
+	return PrivacySecurity::Id();
+}
 
-} // namespace Builder
 } // namespace Settings

@@ -1460,7 +1460,7 @@ void SessionNavigation::showSettings(
 }
 
 void SessionNavigation::showSettings(const SectionShow &params) {
-	showSettings(Settings::Main::Id(), params);
+	showSettings(Settings::MainId(), params);
 }
 
 void SessionNavigation::showPollResults(
@@ -1734,7 +1734,7 @@ void SessionController::suggestArchiveAndMute() {
 			tr::lng_suggest_hide_new_about(tr::rich),
 			st::boxLabel));
 		box->addButton(tr::lng_suggest_hide_new_to_settings(), [=] {
-			showSettings(Settings::PrivacySecurity::Id());
+			showSettings(Settings::PrivacySecurityId());
 		});
 		box->setCloseByOutsideClick(false);
 		box->boxClosing(

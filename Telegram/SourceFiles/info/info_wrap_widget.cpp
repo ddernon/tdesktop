@@ -411,7 +411,7 @@ void WrapWidget::setupTopBarMenuToggle() {
 		addProfileCallsButton();
 	} else if (section.type() == Section::Type::Settings) {
 		addTopBarMenuButton();
-		if (section.settingsType() == ::Settings::Main::Id()) {
+		if (section.settingsType() == ::Settings::MainId()) {
 			const auto &st = (wrap() == Wrap::Layer)
 				? st::infoLayerTopBarSearch
 				: st::infoTopBarSearch;
@@ -800,9 +800,9 @@ void WrapWidget::showFinishedHook() {
 		const auto controller = _controller->parentController();
 		const auto settingsType = _controller->section().settingsType();
 		const auto highlightId = [&]() -> QString {
-			if (settingsType == ::Settings::Main::Id()) {
+			if (settingsType == ::Settings::MainId()) {
 				return u"settings/log-out"_q;
-			} else if (settingsType == ::Settings::Chat::Id()) {
+			} else if (settingsType == ::Settings::ChatId()) {
 				return u"chat/themes-create"_q;
 			}
 			return QString();

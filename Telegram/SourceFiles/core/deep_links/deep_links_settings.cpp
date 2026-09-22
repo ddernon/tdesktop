@@ -223,7 +223,7 @@ Result ShowLogOutMenu(const Context &ctx) {
 		return Result::NeedsAuth;
 	}
 	ctx.controller->setHighlightControlId(u"settings/log-out"_q);
-	ctx.controller->showSettings(::Settings::Main::Id());
+	ctx.controller->showSettings(::Settings::MainId());
 	return Result::Handled;
 }
 
@@ -321,7 +321,7 @@ Result ShowPrivacyBox(
 void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = QString(),
-		.action = SettingsSection{ ::Settings::Main::Id() },
+		.action = SettingsSection{ ::Settings::MainId() },
 	});
 
 	router.add(u"settings"_q, {
@@ -466,7 +466,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"profile-photo/use-emoji"_q,
 		.action = SettingsControl{
-			::Settings::Main::Id(),
+			::Settings::MainId(),
 			u"profile-photo/use-emoji"_q,
 		},
 	});
@@ -483,12 +483,12 @@ void RegisterSettingsHandlers(Router &router) {
 
 	router.add(u"settings"_q, {
 		.path = u"notifications"_q,
-		.action = SettingsSection{ ::Settings::Notifications::Id() },
+		.action = SettingsSection{ ::Settings::NotificationsId() },
 	});
 
 	router.add(u"settings"_q, {
 		.path = u"privacy"_q,
-		.action = SettingsSection{ ::Settings::PrivacySecurity::Id() },
+		.action = SettingsSection{ ::Settings::PrivacySecurityId() },
 	});
 
 	router.add(u"settings"_q, {
@@ -1152,7 +1152,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"privacy/self-destruct"_q,
 		.action = SettingsControl{
-			::Settings::PrivacySecurity::Id(),
+			::Settings::PrivacySecurityId(),
 			u"privacy/self_destruct"_q,
 		},
 	});
@@ -1160,7 +1160,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"privacy/data-settings/suggest-contacts"_q,
 		.action = SettingsControl{
-			::Settings::PrivacySecurity::Id(),
+			::Settings::PrivacySecurityId(),
 			u"privacy/top_peers"_q,
 		},
 	});
@@ -1168,7 +1168,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"privacy/data-settings/clear-payment-info"_q,
 		.action = SettingsControl{
-			::Settings::PrivacySecurity::Id(),
+			::Settings::PrivacySecurityId(),
 			u"privacy/bots_payment"_q,
 		},
 	});
@@ -1176,7 +1176,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"privacy/archive-and-mute"_q,
 		.action = SettingsControl{
-			::Settings::PrivacySecurity::Id(),
+			::Settings::PrivacySecurityId(),
 			u"privacy/archive_and_mute"_q,
 		},
 	});
@@ -1215,7 +1215,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"data/show-18-content"_q,
 		.action = SettingsControl{
-			::Settings::Chat::Id(),
+			::Settings::ChatId(),
 			u"chat/show-18-content"_q,
 		},
 	});
@@ -1253,7 +1253,7 @@ void RegisterSettingsHandlers(Router &router) {
 
 	router.add(u"settings"_q, {
 		.path = u"appearance"_q,
-		.action = SettingsSection{ ::Settings::Chat::Id() },
+		.action = SettingsSection{ ::Settings::ChatId() },
 	});
 
 	router.add(u"settings"_q, {
@@ -1287,7 +1287,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"appearance/themes"_q,
 		.action = SettingsControl{
-			::Settings::Chat::Id(),
+			::Settings::ChatId(),
 			u"chat/themes"_q,
 		},
 	});
@@ -1295,7 +1295,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"appearance/themes/edit"_q,
 		.action = SettingsControl{
-			::Settings::Chat::Id(),
+			::Settings::ChatId(),
 			u"chat/themes-edit"_q,
 		},
 	});
@@ -1303,7 +1303,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"appearance/themes/create"_q,
 		.action = SettingsControl{
-			::Settings::Chat::Id(),
+			::Settings::ChatId(),
 			u"chat/themes-create"_q,
 		},
 	});
@@ -1311,7 +1311,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"appearance/wallpapers"_q,
 		.action = SettingsControl{
-			::Settings::Chat::Id(),
+			::Settings::ChatId(),
 			u"chat/wallpapers"_q,
 		},
 	});
@@ -1319,7 +1319,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"appearance/wallpapers/set"_q,
 		.action = SettingsControl{
-			::Settings::Chat::Id(),
+			::Settings::ChatId(),
 			u"chat/wallpapers-set"_q,
 		},
 	});
@@ -1327,7 +1327,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"appearance/wallpapers/choose-photo"_q,
 		.action = SettingsControl{
-			::Settings::Chat::Id(),
+			::Settings::ChatId(),
 			u"chat/wallpapers-choose-photo"_q,
 		},
 	});
@@ -1382,7 +1382,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"appearance/auto-night-mode"_q,
 		.action = SettingsControl{
-			::Settings::Chat::Id(),
+			::Settings::ChatId(),
 			u"chat/auto-night-mode"_q,
 		},
 	});
@@ -1390,7 +1390,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"appearance/text-size"_q,
 		.action = SettingsControl{
-			::Settings::Main::Id(),
+			::Settings::MainId(),
 			u"main/scale"_q,
 		},
 	});
@@ -1403,7 +1403,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"appearance/stickers-and-emoji"_q,
 		.action = SettingsControl{
-			::Settings::Chat::Id(),
+			::Settings::ChatId(),
 			u"chat/stickers-emoji"_q,
 		},
 	});
@@ -1462,7 +1462,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"appearance/stickers-and-emoji/emoji/suggest"_q,
 		.action = SettingsControl{
-			::Settings::Chat::Id(),
+			::Settings::ChatId(),
 			u"chat/suggest-animated-emoji"_q,
 		},
 	});
@@ -1470,7 +1470,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"appearance/stickers-and-emoji/emoji/quick-reaction"_q,
 		.action = SettingsControl{
-			::Settings::Chat::Id(),
+			::Settings::ChatId(),
 			u"chat/quick-reaction"_q,
 		},
 	});
@@ -1478,7 +1478,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"appearance/stickers-and-emoji/emoji/quick-reaction/choose"_q,
 		.action = SettingsControl{
-			::Settings::Chat::Id(),
+			::Settings::ChatId(),
 			u"chat/quick-reaction-choose"_q,
 		},
 	});
@@ -1486,7 +1486,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"appearance/stickers-and-emoji/suggest-by-emoji"_q,
 		.action = SettingsControl{
-			::Settings::Chat::Id(),
+			::Settings::ChatId(),
 			u"chat/suggest-by-emoji"_q,
 		},
 	});
@@ -1494,7 +1494,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"appearance/stickers-and-emoji/emoji/large"_q,
 		.action = SettingsControl{
-			::Settings::Chat::Id(),
+			::Settings::ChatId(),
 			u"chat/large-emoji"_q,
 		},
 	});
@@ -1679,7 +1679,7 @@ void RegisterSettingsHandlers(Router &router) {
 
 	router.add(u"settings"_q, {
 		.path = u"search"_q,
-		.action = SettingsSection{ ::Settings::Main::Id() },
+		.action = SettingsSection{ ::Settings::MainId() },
 	});
 
 	router.add(u"settings"_q, {
@@ -1700,7 +1700,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"edit/set-photo"_q,
 		.action = SettingsControl{
-			::Settings::Main::Id(),
+			::Settings::MainId(),
 			u"profile-photo"_q,
 		},
 	});
@@ -1831,7 +1831,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"notifications/accounts"_q,
 		.action = SettingsControl{
-			::Settings::Notifications::Id(),
+			::Settings::NotificationsId(),
 			u"notifications/accounts"_q,
 		},
 	});
@@ -1990,28 +1990,28 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"notifications/include-muted-chats"_q,
 		.action = SettingsControl{
-			::Settings::Notifications::Id(),
+			::Settings::NotificationsId(),
 			u"notifications/include-muted-chats"_q,
 		},
 	});
 	router.add(u"settings"_q, {
 		.path = u"notifications/count-unread-messages"_q,
 		.action = SettingsControl{
-			::Settings::Notifications::Id(),
+			::Settings::NotificationsId(),
 			u"notifications/count-unread-messages"_q,
 		},
 	});
 	router.add(u"settings"_q, {
 		.path = u"notifications/new-contacts"_q,
 		.action = SettingsControl{
-			::Settings::Notifications::Id(),
+			::Settings::NotificationsId(),
 			u"notifications/events/joined"_q,
 		},
 	});
 	router.add(u"settings"_q, {
 		.path = u"notifications/pinned-messages"_q,
 		.action = SettingsControl{
-			::Settings::Notifications::Id(),
+			::Settings::NotificationsId(),
 			u"notifications/events/pinned"_q,
 		},
 	});
