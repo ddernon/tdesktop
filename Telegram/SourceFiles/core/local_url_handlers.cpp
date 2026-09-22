@@ -823,9 +823,9 @@ bool ResolveSettings(
 			ShowPhonePrivacyBox(controller);
 			return {};
 		} else if (section == u"devices"_q) {
-			return ::Settings::Sessions::Id();
+			return ::Settings::SessionsId();
 		} else if (section == u"folders"_q) {
-			return ::Settings::Folders::Id();
+			return ::Settings::FoldersId();
 		} else if (section == u"privacy"_q) {
 			return ::Settings::PrivacySecurity::Id();
 		} else if (section == u"themes"_q) {
@@ -837,7 +837,7 @@ bool ResolveSettings(
 		} else if (section == u"auto_delete"_q) {
 			return ::Settings::GlobalTTLId();
 		} else if (section == u"information"_q) {
-			return ::Settings::Information::Id();
+			return ::Settings::InformationId();
 		} else if (section == u"login_email"_q) {
 			ShowLoginEmailSettings(controller);
 			return {};
@@ -848,7 +848,7 @@ bool ResolveSettings(
 	if (type.has_value()) {
 		if (!controller) {
 			return false;
-		} else if (*type == ::Settings::Sessions::Id()) {
+		} else if (*type == ::Settings::SessionsId()) {
 			controller->session().api().authorizations().reload();
 		}
 		controller->showSettings(*type);

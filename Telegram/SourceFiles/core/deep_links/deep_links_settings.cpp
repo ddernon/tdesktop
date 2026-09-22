@@ -326,7 +326,7 @@ void RegisterSettingsHandlers(Router &router) {
 
 	router.add(u"settings"_q, {
 		.path = u"edit"_q,
-		.action = SettingsSection{ ::Settings::Information::Id() },
+		.action = SettingsSection{ ::Settings::InformationId() },
 	});
 
 	router.add(u"settings"_q, {
@@ -336,7 +336,7 @@ void RegisterSettingsHandlers(Router &router) {
 
 	router.add(u"settings"_q, {
 		.path = u"my-profile/edit"_q,
-		.action = SettingsSection{ ::Settings::Information::Id() },
+		.action = SettingsSection{ ::Settings::InformationId() },
 	});
 
 	router.add(u"settings"_q, {
@@ -473,12 +473,12 @@ void RegisterSettingsHandlers(Router &router) {
 
 	router.add(u"settings"_q, {
 		.path = u"devices"_q,
-		.action = SettingsSection{ ::Settings::Sessions::Id() },
+		.action = SettingsSection{ ::Settings::SessionsId() },
 	});
 
 	router.add(u"settings"_q, {
 		.path = u"folders"_q,
-		.action = SettingsSection{ ::Settings::Folders::Id() },
+		.action = SettingsSection{ ::Settings::FoldersId() },
 	});
 
 	router.add(u"settings"_q, {
@@ -493,26 +493,26 @@ void RegisterSettingsHandlers(Router &router) {
 
 	router.add(u"settings"_q, {
 		.path = u"privacy/blocked"_q,
-		.action = SettingsSection{ ::Settings::Blocked::Id() },
+		.action = SettingsSection{ ::Settings::BlockedPeersId() },
 	});
 
 	router.add(u"settings"_q, {
 		.path = u"privacy/blocked/block-user"_q,
 		.action = SettingsControl{
-			::Settings::Blocked::Id(),
+			::Settings::BlockedPeersId(),
 			u"privacy/blocked/block-user"_q,
 		},
 	});
 
 	router.add(u"settings"_q, {
 		.path = u"privacy/active-websites"_q,
-		.action = SettingsSection{ ::Settings::Websites::Id() },
+		.action = SettingsSection{ ::Settings::WebsitesId() },
 	});
 
 	router.add(u"settings"_q, {
 		.path = u"privacy/active-websites/disconnect-all"_q,
 		.action = SettingsControl{
-			::Settings::Websites::Id(),
+			::Settings::WebsitesId(),
 			u"websites/disconnect-all"_q,
 		},
 	});
@@ -1637,7 +1637,7 @@ void RegisterSettingsHandlers(Router &router) {
 
 	router.add(u"settings"_q, {
 		.path = u"calls"_q,
-		.action = SettingsSection{ ::Settings::Calls::Id() },
+		.action = SettingsSection{ ::Settings::CallsId() },
 	});
 
 	router.add(u"settings"_q, {
@@ -1719,7 +1719,7 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"edit/bio"_q,
 		.action = SettingsControl{
-			::Settings::Information::Id(),
+			::Settings::InformationId(),
 			u"edit/bio"_q,
 		},
 	});
@@ -1753,14 +1753,14 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"edit/channel"_q,
 		.action = SettingsControl{
-			::Settings::Information::Id(),
+			::Settings::InformationId(),
 			u"edit/channel"_q,
 		},
 	});
 	router.add(u"settings"_q, {
 		.path = u"edit/add-account"_q,
 		.action = SettingsControl{
-			::Settings::Information::Id(),
+			::Settings::InformationId(),
 			u"edit/add-account"_q,
 		},
 	});
@@ -1785,14 +1785,14 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"devices/terminate-sessions"_q,
 		.action = SettingsControl{
-			::Settings::Sessions::Id(),
+			::Settings::SessionsId(),
 			u"devices/terminate-sessions"_q,
 		},
 	});
 	router.add(u"settings"_q, {
 		.path = u"devices/auto-terminate"_q,
 		.action = SettingsControl{
-			::Settings::Sessions::Id(),
+			::Settings::SessionsId(),
 			u"devices/auto-terminate"_q,
 		},
 	});
@@ -1801,28 +1801,28 @@ void RegisterSettingsHandlers(Router &router) {
 	router.add(u"settings"_q, {
 		.path = u"folders/create"_q,
 		.action = SettingsControl{
-			::Settings::Folders::Id(),
+			::Settings::FoldersId(),
 			u"folders/create"_q,
 		},
 	});
 	router.add(u"settings"_q, {
 		.path = u"folders/add-recommended"_q,
 		.action = SettingsControl{
-			::Settings::Folders::Id(),
+			::Settings::FoldersId(),
 			u"folders/add-recommended"_q,
 		},
 	});
 	router.add(u"settings"_q, {
 		.path = u"folders/show-tags"_q,
 		.action = SettingsControl{
-			::Settings::Folders::Id(),
+			::Settings::FoldersId(),
 			u"folders/show-tags"_q,
 		},
 	});
 	router.add(u"settings"_q, {
 		.path = u"folders/tab-view"_q,
 		.action = SettingsControl{
-			::Settings::Folders::Id(),
+			::Settings::FoldersId(),
 			u"folders/tab-view"_q,
 		},
 	});

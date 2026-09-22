@@ -516,7 +516,7 @@ void SetupBlockedList(
 		st::settingsButton,
 		{ &st::menuIconBlock });
 	blockedPeers->addClickHandler([=] {
-		showOther(Blocked::Id());
+		showOther(BlockedPeersId());
 	});
 	std::move(
 		updateTrigger
@@ -556,7 +556,7 @@ void SetupWebsitesList(
 		st::settingsButton,
 		{ &st::menuIconIpAddress }
 	)->addClickHandler([=] {
-		showOther(Websites::Id());
+		showOther(WebsitesId());
 	});
 
 	wrap->toggleOn(std::move(count) | rpl::map(rpl::mappers::_1 > 0));
@@ -586,7 +586,7 @@ void SetupSessionsList(
 		st::settingsButton,
 		{ &st::menuIconDevices }
 	)->addClickHandler([=] {
-		showOther(Sessions::Id());
+		showOther(SessionsId());
 	});
 
 	Ui::AddSkip(container);
@@ -1370,7 +1370,7 @@ void BuildSecuritySection(
 		.icon = { &st::menuIconBlock },
 		.label = std::move(blockedCount),
 		.onClick = [=] {
-			showOther(Blocked::Id());
+			showOther(BlockedPeersId());
 		},
 		.keywords = { u"blocked"_q, u"ban"_q },
 	});
@@ -1397,7 +1397,7 @@ void BuildSecuritySection(
 		.icon = { &st::menuIconIpAddress },
 		.label = std::move(websitesLabel),
 		.onClick = [=] {
-			showOther(Websites::Id());
+			showOther(WebsitesId());
 		},
 		.keywords = { u"websites"_q, u"bots"_q, u"logged"_q },
 		.shown = std::move(websitesShown),
@@ -1421,7 +1421,7 @@ void BuildSecuritySection(
 		.icon = { &st::menuIconDevices },
 		.label = std::move(sessionsCount),
 		.onClick = [=] {
-			showOther(Sessions::Id());
+			showOther(SessionsId());
 		},
 		.keywords = { u"sessions"_q, u"devices"_q, u"active"_q },
 	});

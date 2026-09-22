@@ -332,7 +332,7 @@ void BuildSectionButtons(SectionBuilder &builder) {
 		builder.addSectionButton({
 			.id = u"main/account"_q,
 			.title = tr::lng_settings_my_account(),
-			.targetSection = Information::Id(),
+			.targetSection = InformationId(),
 			.icon = { &st::menuIconProfile },
 			.keywords = { u"profile"_q, u"edit"_q, u"information"_q },
 		});
@@ -391,7 +391,7 @@ void BuildSectionButtons(SectionBuilder &builder) {
 			.id = u"main/folders"_q,
 			.title = tr::lng_settings_section_filters(),
 			.icon = { &st::menuIconShowInFolder },
-			.onClick = [=] { showOther(Folders::Id()); },
+			.onClick = [=] { showOther(FoldersId()); },
 			.keywords = { u"filters"_q, u"tabs"_q },
 			.shown = std::move(shownProducer),
 		});
@@ -408,7 +408,7 @@ void BuildSectionButtons(SectionBuilder &builder) {
 	builder.addSectionButton({
 		.id = u"main/devices"_q,
 		.title = tr::lng_settings_section_devices(),
-		.targetSection = Calls::Id(),
+		.targetSection = CallsId(),
 		.icon = { &st::menuIconUnmute },
 		.keywords = { u"sessions"_q, u"calls"_q },
 	});
@@ -1006,7 +1006,7 @@ void Main::fillTopBarMenu(const Ui::Menu::MenuCallback &addAction) {
 	if (!controller()->session().supportMode()) {
 		addAction(
 			tr::lng_settings_information(tr::now),
-			[=] { showOther(Information::Id()); },
+			[=] { showOther(InformationId()); },
 			&st::menuIconEdit);
 	}
 	const auto window = &controller()->window();
