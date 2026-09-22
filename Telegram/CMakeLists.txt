@@ -1570,8 +1570,8 @@ PRIVATE
     settings/sections/settings_folders.h
     settings/sections/settings_global_ttl.cpp
     settings/sections/settings_global_ttl.h
-    settings/settings_information.cpp
-    settings/settings_information.h
+    settings/sections/settings_information.cpp
+    settings/sections/settings_information.h
     settings/settings_intro.cpp
     settings/settings_intro.h
     settings/sections/settings_local_passcode.cpp
@@ -1586,23 +1586,23 @@ PRIVATE
     settings/sections/settings_notifications.h
     settings/sections/settings_privacy_security.cpp
     settings/sections/settings_privacy_security.h
-    settings/settings_notifications_type.cpp
-    settings/settings_notifications_type.h
-    settings/settings_passkeys.cpp
-    settings/settings_passkeys.h
+    settings/sections/settings_notifications_type.cpp
+    settings/sections/settings_notifications_type.h
+    settings/sections/settings_passkeys.cpp
+    settings/sections/settings_passkeys.h
     settings/settings_power_saving.cpp
     settings/settings_power_saving.h
-    settings/settings_premium.cpp
-    settings/settings_premium.h
+    settings/sections/settings_premium.cpp
+    settings/sections/settings_premium.h
     settings/settings_privacy_controllers.cpp
     settings/settings_privacy_controllers.h
     settings/settings_scale_preview.cpp
     settings/settings_scale_preview.h
-    settings/settings_shortcuts.cpp
-    settings/settings_shortcuts.h
     settings/settings_type.h
-    settings/settings_websites.cpp
-    settings/settings_websites.h
+    settings/sections/settings_shortcuts.cpp
+    settings/sections/settings_shortcuts.h
+    settings/sections/settings_websites.cpp
+    settings/sections/settings_websites.h
     storage/details/storage_file_utilities.cpp
     storage/details/storage_file_utilities.h
     storage/details/storage_settings_scheme.cpp
