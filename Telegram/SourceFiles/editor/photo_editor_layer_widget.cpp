@@ -47,7 +47,9 @@ void OpenWithPreparedFile(
 
 	sideLimit = sideLimit ? sideLimit : PhotoSideLimit(true);
 	const auto accepted = std::make_shared<bool>();
-	auto callback = [=](const PhotoModifications &mods) {
+	// The editor layer outlives a closed box, which owns *file.
+	auto callback = crl::guard(parent, [=](
+			const PhotoModifications &mods) {
 		*accepted = true;
 		image->modifications = mods;
 		Storage::UpdateImageDetails(*file, previewWidth, sideLimit);
@@ -59,7 +61,7 @@ void OpenWithPreparedFile(
 				: PreparedFile::Type::File;
 		}
 		doneCallback(true);
-	};
+	});
 	auto copy = image->data;
 	const auto fileImage = std::make_shared<Image>(std::move(copy));
 	const auto keepRatio = !exactSize.isEmpty();

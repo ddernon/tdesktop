@@ -63,6 +63,7 @@ enum class InfoDisplayType : char;
 struct StateRequest;
 struct TextState;
 struct MessageSelection;
+class GramReadLine;
 class Media;
 class Reply;
 struct HistoryMessageRichPage;
@@ -161,6 +162,7 @@ public:
 		Element *replacing) = 0;
 	virtual QString elementAuthorRank(not_null<const Element*> view) = 0;
 	virtual bool elementHideTopicButton(not_null<const Element*> view) = 0;
+	virtual GramReadLine *elementGramReadLine() = 0;
 
 	virtual ~ElementDelegate() {
 	}
@@ -227,6 +229,7 @@ public:
 		Element *replacing) override;
 	QString elementAuthorRank(not_null<const Element*> view) override;
 	bool elementHideTopicButton(not_null<const Element*> view) override;
+	GramReadLine *elementGramReadLine() override;
 
 };
 
@@ -668,7 +671,7 @@ public:
 		int top = 0;
 		int height = 0;
 	};
-	[[nodiscard]] virtual VerticalRepaintRange verticalRepaintRange() const;
+	[[nodiscard]] VerticalRepaintRange verticalRepaintRange() const;
 
 	[[nodiscard]] virtual bool isSignedAuthorElided() const;
 
@@ -776,6 +779,10 @@ protected:
 		Painter &p,
 		const PaintContext &context,
 		int geometryHeight) const;
+	void paintSwipeReplyIcon(
+		Painter &p,
+		const PaintContext &context,
+		QRect g) const;
 
 	[[nodiscard]] ClickHandlerPtr fromLink() const;
 
