@@ -342,6 +342,8 @@ PRIVATE
     boxes/gift_credits_box.h
     boxes/gift_premium_box.cpp
     boxes/gift_premium_box.h
+    boxes/keys_legend.cpp
+    boxes/keys_legend.h
     boxes/language_box.cpp
     boxes/language_box.h
     boxes/max_invite_box.cpp
@@ -2135,6 +2137,8 @@ PRIVATE
     ui/controls/custom_emoji_toast_icon.h
     ui/controls/emoji_button_factory.cpp
     ui/controls/emoji_button_factory.h
+    ui/controls/keys_legend.cpp
+    ui/controls/keys_legend.h
     ui/controls/location_picker.cpp
     ui/controls/location_picker.h
     ui/controls/silent_toggle.cpp
@@ -2653,6 +2657,8 @@ if (MSVC)
     )
     target_link_options(Telegram
     PRIVATE
+        # Keep delay-load protection across Qt variants with different imports.
+        /IGNORE:4199
         /DELAYLOAD:secur32.dll
         /DELAYLOAD:winmm.dll
         /DELAYLOAD:ws2_32.dll
@@ -2671,12 +2677,15 @@ if (MSVC)
         /DELAYLOAD:uxtheme.dll
         /DELAYLOAD:crypt32.dll
         /DELAYLOAD:bcrypt.dll
+        /DELAYLOAD:ncrypt.dll
         /DELAYLOAD:netapi32.dll
         /DELAYLOAD:mpr.dll
         /DELAYLOAD:imm32.dll
+        /DELAYLOAD:hid.dll
         /DELAYLOAD:userenv.dll
         /DELAYLOAD:wtsapi32.dll
         /DELAYLOAD:propsys.dll
+        /DELAYLOAD:uiautomationcore.dll
     )
     if (QT_VERSION GREATER 6)
         if (NOT build_winarm)
